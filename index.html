@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Building Management Dashboard</title>
+    <title>Astro Building Management System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --header-blue: #6264A7;
+            /* Brand & UI Colors */
+            --header-bg: #18181B; /* Executive Charcoal Black */
             --bg-dark: #d5dadd;
             --dashboard-bg: #ffffff;
             --box-bg: #f4f7fa;
@@ -17,7 +17,12 @@
             --text-grey: #64748b;
             
             --blue-icon: #3b82f6;
-            --green-icon: #22c55e;
+            
+            /* Dynamic Severity Colors */
+            --status-green: #4ade80;
+            --status-green-dark: #22c55e;
+            --status-green-text: #064e3b;
+            
             --red-alert: #ef4444;
             --orange-warn: #f59e0b;
             
@@ -34,7 +39,9 @@
             user-select: none;
         }
 
-        /* Full Screen Dynamic Setup (Desktop/TV) */
+        /* ========================================= */
+        /* FULL SCREEN DESKTOP MODE (Dynamic vh/vw)  */
+        /* ========================================= */
         body {
             background-color: var(--bg-dark);
             width: 100vw;
@@ -54,7 +61,7 @@
 
         /* Header */
         header {
-            background-color: var(--header-blue);
+            background-color: var(--header-bg);
             color: white;
             padding: 1.2vh 2vw;
             display: flex;
@@ -63,11 +70,20 @@
             z-index: 10;
             height: 6.5vh;
         }
-        .logo-a { font-size: 3.5vh; font-weight: 900; font-style: italic; margin-right: 1vw; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);}
-        .header-title { font-size: 2.8vh; font-weight: bold; letter-spacing: 0.1vw; }
+
+        /* REPLACED .logo-a WITH .header-logo FOR THE IMAGE */
+        .header-logo {
+            height: 4.5vh; /* Sized to fit nicely within the 6.5vh header height */
+            width: auto;   /* Maintain aspect ratio */
+            margin-right: 1.5vw;
+            /* Optional: subtle drop shadow to make it pop off the dark background */
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .header-title { font-size: 2.8vh; font-weight: bold; letter-spacing: 0.1vw; text-transform: uppercase; }
         .header-divider { margin: 0 1vw; font-weight: normal; opacity: 0.6;}
 
-        /* Grid Layout */
+        /* Main Grid */
         .grid {
             flex: 1;
             display: grid;
@@ -77,22 +93,9 @@
             height: 93.5vh;
         }
 
-        .column { display: flex; flex-direction: column; gap: 1.5vh; height: 100%; }
+        .column { display: flex; flex-direction: column; gap: 1.5vh; height: 100%; min-width: 0;}
 
-        .col-title {
-            text-align: center;
-            font-size: 2.2vh;
-            font-weight: 900;
-            color: var(--text-dark);
-            background: white;
-            padding: 1.2vh;
-            border: 0.2vh solid var(--border-color);
-            border-radius: 0.8vh;
-            box-shadow: 0 0.4vh 0.8vh rgba(0,0,0,0.05);
-            text-transform: uppercase;
-        }
-
-        /* Card Elements */
+        /* Card Framework - FIXED OVERFLOW */
         .card {
             background: white;
             border: 0.2vh solid var(--border-color);
@@ -103,12 +106,14 @@
             gap: 1vh;
             flex: 1; 
             box-shadow: 0 0.4vh 1vh rgba(0,0,0,0.08);
+            min-height: 0;
+            overflow: hidden;
         }
         .card-inner {
             background: var(--box-bg);
             border: 0.2vh solid var(--border-color);
             border-radius: 0.8vh;
-            padding: 1.5vh 2vw;
+            padding: 1vh 1.5vw;
             height: 100%;
             display: flex;
             flex-direction: column;
@@ -116,86 +121,160 @@
             align-items: center;
             text-align: center;
             width: 100%;
+            min-height: 0;
+            overflow: hidden; 
         }
+
+        /* Split Row for BEI & CO2 */
+        .split-row {
+            display: flex;
+            gap: 1.5vw;
+            flex: 0.8;
+            width: 100%;
+            min-height: 0;
+        }
+        .split-row .card { padding: 1vh; }
+        .split-row .card-inner { padding: 1vh 0.5vw; }
         
-        h4 { font-size: 1.8vh; font-weight: 800; color: var(--text-grey); text-transform: uppercase; width: 100%; }
+        .header-wrap { display: flex; align-items: center; gap: 0.8vw; width: 100%; justify-content: center; margin-bottom: 0.5vh;}
+        .header-icon { font-size: min(2.5vh, 2vw); }
+        h4 { font-size: min(1.8vh, 1.5vw); font-weight: 800; color: var(--text-grey); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
 
         /* Interactivity */
-        .interactive { transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); cursor: pointer; position: relative; }
-        .interactive:hover { transform: translateY(-0.5vh) scale(1.01); box-shadow: 0 1.5vh 3vh rgba(0,0,0,0.12); border-color: var(--blue-icon); background-color: #ffffff; z-index: 5;}
-        .interactive:active { transform: translateY(0px) scale(0.98); box-shadow: 0 0.5vh 1vh rgba(0,0,0,0.1); }
+        .interactive { transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s, border-color 0.2s, background-color 0.3s ease; cursor: pointer; position: relative; }
+        .interactive:hover { transform: translateY(-0.3vh) scale(1.01); box-shadow: 0 1vh 2vh rgba(0,0,0,0.12); border-color: var(--blue-icon); z-index: 5;}
+        .interactive:active { transform: translateY(0px) scale(0.99); box-shadow: 0 0.5vh 1vh rgba(0,0,0,0.1); }
+        .hover-bg-white:hover { background-color: #ffffff; }
 
-        /* -- SPECIFIC WIDGETS -- */
+        /* ========================================= */
+        /* WIDGET DESIGNS                            */
+        /* ========================================= */
+
+        /* 1. Status Grid */
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 1.5vh;
+            flex: 2;
+            width: 100%;
+            min-height: 0;
+        }
+        .status-box {
+            border-radius: 0.8vh;
+            display: flex;
+            flex-direction: row; 
+            align-items: center;
+            justify-content: flex-start;
+            padding: 1vh 1vw;
+            gap: 1vw;
+            box-shadow: inset 0 0 2vh rgba(255,255,255,0.3), 0 0.5vh 1vh rgba(0,0,0,0.1);
+            border: 0.2vh solid transparent;
+            overflow: hidden;
+            transition: all 0.3s ease; 
+        }
         
-        /* Occupancy */
-        .occ-wrap { display: flex; align-items: center; justify-content: space-between; width: 100%; flex: 1; gap: 1vw;}
-        .occ-wrap i { font-size: 8vh; color: var(--blue-icon); filter: drop-shadow(2px 4px 6px rgba(59, 130, 246, 0.3));}
-        .occ-box { display: flex; flex-direction: column; justify-content: center; flex: 1; padding: 1.5vh 0; background: white; border: 0.2vh solid #bae6fd; border-radius: 0.8vh; box-shadow: inset 0 0 1vh rgba(0,0,0,0.02); }
-        .occ-box h2 { font-size: 5.5vh; font-weight: 900; color: var(--text-dark); line-height: 1; }
-        .occ-box span { font-size: 1.6vh; font-weight: bold; color: var(--text-grey); text-transform: uppercase; margin-top: 0.5vh;}
+        .status-normal { background: var(--status-green); color: var(--status-green-text); border-color: var(--status-green-dark); }
+        .status-warning { background: #fde047; color: #713f12; border-color: #eab308; }
+        .status-critical { background: #fca5a5; color: #7f1d1d; border-color: #ef4444; }
+        .status-cool { background: #bae6fd; color: #0c4a6e; border-color: #38bdf8; }
+        
+        .status-box.status-normal:hover, .energy-alert-banner.status-normal:hover { background-color: var(--status-green); border-color: var(--status-green-dark); filter: brightness(1.05); }
+        .status-box.status-warning:hover, .energy-alert-banner.status-warning:hover { background-color: #fde047; border-color: #eab308; filter: brightness(1.05); }
+        .status-box.status-critical:hover, .energy-alert-banner.status-critical:hover { background-color: #fca5a5; border-color: #ef4444; filter: brightness(1.05); }
+        .status-box.status-cool:hover { background-color: #bae6fd; border-color: #38bdf8; filter: brightness(1.05); }
 
-        /* Gauges */
-        .gauge-row { display: flex; gap: 1vw; flex: 1.5; width: 100%;}
-        .gauge-card { flex: 1; background: var(--box-bg); border: 0.2vh solid var(--border-color); border-radius: 0.8vh; padding: 1.5vh; display: flex; flex-direction: column; align-items: center; min-width: 0;}
-        .gauge-container { width: 100%; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; min-height: 0;}
-        .canvas-wrapper { width: 100%; display: flex; justify-content: center; align-items: flex-end; flex: 1; min-height: 0;}
-        .gauge-val { font-size: 3.5vh; font-weight: 900; color: var(--text-dark); margin-top: -1vh;}
-        .gauge-icon { font-size: 2.5vh; color: var(--text-grey); margin-top: 0.5vh;}
+        .status-icon { font-size: min(4.5vh, 3.5vw); color: inherit; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); flex-shrink: 0;}
+        .status-text-col { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; min-width: 0;}
+        .status-box h5 { font-size: min(1.5vh, 1.2vw); font-weight: 800; text-transform: uppercase; opacity: 0.9; margin-bottom: 0.2vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: left;}
+        .status-box h2 { font-size: min(3vh, 2.5vw); font-weight: 900; line-height: 1; margin-bottom: 0.2vh; letter-spacing: 0.05vw; }
+        .status-box span { font-size: min(1.4vh, 1.1vw); font-weight: bold; text-transform: uppercase;}
 
-        /* Air Quality - FIXED SPACING */
-        .aq-wrap { display: flex; align-items: center; justify-content: center; gap: 2.5vw; width: 100%; flex: 1; padding: 0 1vw;}
-        .aq-wrap i { font-size: 8vh; color: var(--blue-icon); filter: drop-shadow(2px 4px 6px rgba(59, 130, 246, 0.3));}
-        .aq-text { display: flex; flex-direction: column; gap: 1vh; text-align: left; flex: 1;}
-        .aq-text div { font-size: 2.4vh; font-weight: 900; color: var(--text-dark); display: flex; justify-content: space-between; gap: 1vw;}
-        .aq-val-in { color: var(--blue-icon); font-size: 3vh;}
-        .aq-val-out { color: var(--text-grey); font-size: 3vh;}
+        /* Meeting Rooms */
+        .meeting-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.8vh; width: 100%; flex: 1; min-height: 0;}
+        .meeting-pills { display: flex; flex-wrap: wrap; gap: 0.8vh; justify-content: center; }
+        .pill { background: white; padding: 0.4vh 0.8vw; border-radius: 0.5vh; border: 0.2vh solid var(--border-color); font-size: min(1.6vh, 1.2vw); font-weight: bold; color: var(--text-dark); box-shadow: 0 0.2vh 0.5vh rgba(0,0,0,0.05); display: flex; align-items: center; gap: 0.4vw; white-space: nowrap;}
+        .pill i { font-size: 1.3vh; color: var(--blue-icon); opacity: 0.7;}
 
-        /* Alerts & Energy */
-        .alert-box { background: #fef2f2; border: 0.3vh solid #fca5a5; flex: 0.8; animation: pulse-border 2s infinite;}
-        .alert-box i { font-size: 8vh; color: var(--red-alert); margin-bottom: 1vh; animation: pulse 1.5s infinite; }
-        .alert-box h3 { font-size: 3.5vh; font-weight: 900; color: var(--red-alert); letter-spacing: 0.1vw;}
+        /* 2. Energy Column */
+        .energy-wrap { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 1.5vw; width: 100%; flex: 1; min-height: 0;}
+        .energy-main-icon { font-size: min(6vh, 5vw); color: var(--orange-warn); filter: drop-shadow(0 4px 6px rgba(245, 158, 11, 0.4)); flex-shrink: 0;}
+        .energy-text { display: flex; flex-direction: column; align-items: flex-start; justify-content: center;}
+        .energy-text h1 { font-size: min(5.5vh, 4vw); font-weight: 900; color: var(--text-dark); line-height: 1; letter-spacing: -0.1vw; margin: 0; white-space: nowrap;}
+        .energy-text p { font-size: min(1.8vh, 1.5vw); font-weight: bold; color: var(--text-grey); margin-top: 0.5vh; text-transform: uppercase; white-space: nowrap;}
 
-        .energy-wrap { display: flex; align-items: center; justify-content: center; gap: 2vw; width: 100%; flex: 1.2;}
-        .energy-wrap i { font-size: 10vh; color: var(--orange-warn); filter: drop-shadow(2px 4px 6px rgba(245, 158, 11, 0.4));}
-        .energy-text { text-align: left; }
-        .energy-text h1 { font-size: 6.5vh; font-weight: 900; color: var(--text-dark); line-height: 1; letter-spacing: -0.1vw;}
-        .energy-text p { font-size: 2vh; font-weight: bold; color: var(--text-grey); margin-top: 0.5vh; }
+        .energy-alert-banner { width: 100%; padding: 1.5vh; display: flex; align-items: center; justify-content: center; gap: 1vw; margin-top: auto; border-top: 0.2vh solid rgba(0,0,0,0.1); }
+        .energy-alert-banner i { font-size: min(3.5vh, 3vw); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+        .energy-alert-banner h3 { font-size: min(2.5vh, 2vw); font-weight: 900; letter-spacing: 0.1vw; margin: 0; }
 
-        .mini-stat { display: flex; align-items: center; justify-content: center; gap: 1.5vw; width: 100%; font-size: 2.8vh; color: var(--text-grey); font-weight: 600;}
-        .mini-stat i { font-size: 5.5vh; }
-        .mini-stat strong { font-weight: 900; color: var(--text-dark); font-size: 3.8vh; margin-left: 0.5vw;}
+        .mini-stat { display: flex; align-items: center; justify-content: center; width: 100%; font-size: min(2.5vh, 2vw); color: var(--text-grey); font-weight: 600;}
+        .mini-stat i { font-size: min(4vh, 3.5vw); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); flex-shrink: 0;}
+        .mini-stat strong { font-weight: 900; color: var(--text-dark); font-size: min(3.2vh, 2.8vw); margin-left: 0.5vw;}
 
-        /* Area Chart */
-        .area-chart { display: flex; flex-direction: column; justify-content: space-between; gap: 1.5vh; width: 100%; flex: 1; padding: 0.5vh 0; min-height: 0;}
+        /* NEW BADGE STYLES FOR SOLAR & TREES */
+        .icon-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: min(8vh, 6vw);
+            height: min(8vh, 6vw);
+            border-radius: 50%;
+            flex-shrink: 0;
+            box-shadow: 0 0.5vh 1vh rgba(0,0,0,0.15);
+        }
+        .icon-badge i {
+            font-size: min(4vh, 3vw) !important;
+            filter: none !important;
+            color: white;
+        }
+        .solar-badge { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+        .tree-badge { background: linear-gradient(135deg, #4ade80, #16a34a); }
+
+
+        /* -- EDUCATIONAL ELEMENTS -- */
+        .carousel-container { position: relative; height: 2.5vh; width: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; margin-top: 1.5vh; }
+        .carousel-item { position: absolute; opacity: 0; transition: opacity 0.8s ease-in-out; font-size: min(1.4vh, 1.2vw); font-weight: 800; color: var(--text-dark); width: 100%; text-align: center; }
+        .carousel-item.active { opacity: 1; z-index: 2;}
+
+        .flip-container { perspective: 1000px; flex: 1; padding: 0; border: none; box-shadow: none; background: transparent; cursor: pointer; min-height: 0;}
+        .flipper { transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; position: relative; width: 100%; height: 100%; }
+        .flipper.flipped { transform: rotateY(180deg); }
+        .front, .back { backface-visibility: hidden; position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 1vh; box-shadow: 0 0.4vh 1vh rgba(0,0,0,0.08); border: 0.2vh solid var(--border-color); background: var(--box-bg); display: flex; flex-direction: column; justify-content: center; align-items: center;}
+        .front:hover { background-color: #ffffff; border-color: var(--status-green-dark);}
+        
+        .back { transform: rotateY(180deg); background: var(--status-green-dark); color: white; border-color: var(--status-green-dark); padding: 1vh 2vw; text-align: center; }
+        .info-icon { position: absolute; top: 1vh; right: 1vw; font-size: min(1.8vh, 1.5vw); color: var(--text-grey); opacity: 0.6; }
+        .back .info-icon { color: white; opacity: 0.9;}
+
+        /* 3. Area Usage Column */
+        .area-chart { display: flex; flex-direction: column; justify-content: space-between; gap: 1vh; width: 100%; flex: 1; padding: 0.5vh 0; min-height: 0;}
         .chart-group { display: flex; align-items: stretch; width: 100%; flex: 1; min-height: 0;}
-        .group-name { width: 25%; text-align: right; padding-right: 1vw; font-size: 1.8vh; font-weight: 800; color: var(--text-dark); display: flex; align-items: center; justify-content: flex-end; line-height: 1.1;}
-        .bar-container { flex: 1; border-left: 0.3vh solid #94a3b8; padding-left: 1vw; display: flex; flex-direction: column; justify-content: center; gap: 0.8vh; min-height: 0;}
+        .group-name { width: 25%; text-align: right; padding-right: 1vw; font-size: min(1.6vh, 1.4vw); font-weight: 800; color: var(--text-dark); display: flex; align-items: center; justify-content: flex-end; line-height: 1.1;}
+        .bar-container { flex: 1; border-left: 0.3vh solid #94a3b8; padding-left: 1vw; display: flex; flex-direction: column; justify-content: center; gap: 0.6vh; min-height: 0;}
         .bar-row { display: flex; align-items: center; width: 100%; flex: 1; cursor: pointer; min-height: 0;}
-        .bar-label { width: 20%; font-size: 1.6vh; font-weight: bold; color: var(--text-dark); text-align: left; white-space: nowrap;}
-        .bar-track { flex: 1; height: 1.5vh; display: flex; align-items: center; background: #e2e8f0; border-radius: 1vh; overflow: hidden; margin-left: 0.5vw;}
+        .bar-label { width: 22%; font-size: min(1.4vh, 1.2vw); font-weight: bold; color: var(--text-dark); text-align: left; white-space: nowrap;}
+        .bar-track { flex: 1; height: 1.2vh; display: flex; align-items: center; background: #e2e8f0; border-radius: 1vh; overflow: hidden; margin-left: 0.5vw;}
         .bar-fill { height: 100%; transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1); border-radius: 0 1vh 1vh 0;}
-        .bg-main { background: linear-gradient(90deg, #2563eb, #60a5fa); }
-        .bg-broad { background: linear-gradient(90deg, #475569, #94a3b8); }
-        .bg-cabin { background: linear-gradient(90deg, #16a34a, #4ade80); }
-
-        /* Lifts & Meetings */
-        .lift-wrap { display: flex; align-items: center; justify-content: center; gap: 1.5vw; width: 100%; font-size: 2.6vh; font-weight: 900; flex: 1;}
-        .lift-wrap i { font-size: 6vh; color: #64748b; }
         
-        .meeting-wrap { display: flex; align-items: center; justify-content: center; gap: 1.5vw; width: 100%; font-size: 2.2vh; line-height: 1.5; font-weight: bold; flex: 1;}
-        .meeting-wrap i { font-size: 6vh; color: #64748b; }
-        .meeting-text { text-align: left; width: 100%;}
-        .meeting-text div { background: white; padding: 0.5vh 1vw; border-radius: 0.5vh; border: 0.1vh solid var(--border-color); margin-bottom: 0.5vh; display: inline-block; width: 100%;}
+        .bg-main { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+        .bg-broad { background: linear-gradient(90deg, #64748b, #94a3b8); }
+        .bg-cabin { background: linear-gradient(90deg, #22c55e, #4ade80); }
 
+        /* BEI & CO2 Styles */
+        .large-metric-icon { font-size: min(6vh, 4.5vw); margin-bottom: 0.5vh; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15)); }
+        .large-metric-val { font-size: min(4.5vh, 3.5vw); font-weight: 900; color: var(--text-dark); line-height: 1; letter-spacing: -0.1vw; margin: 0;}
+        .large-metric-unit { font-size: 0.4em; vertical-align: baseline; font-weight: 800; color: var(--text-grey);}
+        .large-metric-desc { font-size: min(1.2vh, 1vw); font-weight: 900; margin-top: 0.5vh; text-transform: uppercase; letter-spacing: 0.05vw;}
+
+        /* Toasts */
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        @keyframes pulse-border { 0% { border-color: #fca5a5; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { border-color: #ef4444; box-shadow: 0 0 0 1.5vh rgba(239, 68, 68, 0); } 100% { border-color: #fca5a5; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-
+        
         #toast { position: fixed; bottom: -10vh; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.95); color: white; padding: 1.5vh 3vw; border-radius: 5vh; font-size: 2.2vh; font-weight: bold; transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 1000; box-shadow: 0 1vh 2vh rgba(0,0,0,0.3); pointer-events: none; }
         #toast.show { bottom: 4vh; }
 
 
         /* ========================================= */
-        /* MOBILE RESPONSIVENESS OVERRIDES           */
+        /* MOBILE RESPONSIVENESS (PERFECT FIT & FILL)*/
         /* ========================================= */
         @media (max-width: 1024px) {
             body { height: auto; overflow-y: auto; overflow-x: hidden; display: block; }
@@ -209,64 +288,75 @@
             .grid { grid-template-columns: 1fr; height: auto; display: flex; flex-direction: column; gap: 15px; padding: 10px; }
             .column { height: auto; gap: 15px; }
             
-            .col-title { font-size: 18px; padding: 12px; border-width: 2px; }
-            .card { padding: 10px; border-radius: 10px; border-width: 2px; }
+            .card { padding: 10px; border-radius: 10px; border-width: 2px; height: auto; overflow: visible;}
+            .card-inner { padding: 15px; border-radius: 8px; gap: 15px; border-width: 2px; width: 100%; justify-content: center; height: auto; overflow: visible;}
             
-            .card-inner { padding: 15px; border-radius: 8px; gap: 15px; border-width: 2px; width: 100%; justify-content: center;}
-            h4 { font-size: 16px; margin-bottom: 5px; text-align: center;}
+            .header-wrap { justify-content: center; margin-bottom: 5px; gap: 10px;}
+            .header-icon { font-size: 20px; }
+            h4 { font-size: 16px; margin-bottom: 0; text-align: center; width: auto; white-space: normal;}
             
-            .occ-wrap { gap: 10px; flex-direction: row; }
-            .occ-wrap i { font-size: 40px; }
-            .occ-box { padding: 15px 5px; border-width: 2px; }
-            .occ-box h2 { font-size: 28px; }
-            .occ-box span { font-size: 13px; }
+            /* Status Grid Mobile */
+            .status-grid { gap: 10px; height: auto;}
+            .status-box { padding: 15px 10px; border-width: 2px; gap: 10px; flex-direction: column; text-align: center; justify-content: center;}
+            .status-icon { font-size: 36px; }
+            .status-text-col { align-items: center; width: 100%;}
+            .status-box h5 { font-size: 13px; margin-bottom: 5px; text-align: center; white-space: normal;}
+            .status-box h2 { font-size: 24px; margin-bottom: 5px;}
+            .status-box span { font-size: 12px; }
             
-            .gauge-row { flex-direction: row; gap: 10px; width: 100%; }
-            .gauge-card { padding: 10px; border-width: 2px; min-width: 0; }
-            .gauge-container { justify-content: center; margin-top: 5px; }
-            .canvas-wrapper { margin-bottom: -15px; }
-            .gauge-val { font-size: 24px; margin-top: 0; }
-            .gauge-icon { font-size: 20px; margin-top: 5px; }
+            /* Meeting Rooms */
+            .meeting-wrap { height: auto; gap: 10px;}
+            .meeting-pills { gap: 8px; }
+            .pill { font-size: 15px; padding: 10px 14px; border-width: 2px; gap: 8px;}
+            .pill i { font-size: 14px; }
+
+            /* Energy Column Mobile Fixes */
+            .energy-wrap { flex-direction: column; gap: 15px; text-align: center; padding: 10px 0;}
+            .energy-main-icon { font-size: 50px; }
+            .energy-text { align-items: center; }
+            .energy-text h1 { font-size: 45px; white-space: normal;}
+            .energy-text p { font-size: 16px; margin-top: 5px; white-space: normal;}
             
-            /* Mobile Air Quality Override */
-            .aq-wrap { flex-direction: column; gap: 15px; }
-            .aq-wrap i { font-size: 50px; }
-            .aq-text { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-            .aq-text div { background: white; padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 18px; justify-content: space-between; gap: 10px;}
+            .energy-alert-banner { padding: 15px 10px; gap: 10px; border-top-width: 2px;}
+            .energy-alert-banner i { font-size: 28px; }
+            .energy-alert-banner h3 { font-size: 20px; }
+
+            /* Badges Mobile Spacing */
+            .mini-stat { font-size: 18px; flex-direction: row; justify-content: center; gap: 20px; width: 100%;}
+            .icon-badge { width: 70px; height: 70px; }
+            .icon-badge i { font-size: 35px !important; }
+            .mini-stat strong { font-size: 28px; margin-left: 5px;}
+
+            /* Mobile Overrides for Educational UX */
+            .carousel-container { height: 30px; margin-top: 15px; }
+            .carousel-item { font-size: 14px; }
+            .flip-container { min-height: 120px; }
+            .front, .back { border-radius: 8px; border-width: 2px; padding: 15px;}
+            .info-icon { font-size: 18px; top: 10px; right: 15px; }
+            .back h4 { font-size: 16px; color: white;}
+            .back p { font-size: 14px; font-weight: normal;}
             
-            .alert-box { padding: 25px 10px; border-width: 3px; }
-            .alert-box i { font-size: 60px; }
-            .alert-box h3 { font-size: 24px; }
-            
-            .energy-wrap { flex-direction: column; text-align: center; gap: 10px; }
-            .energy-wrap i { font-size: 60px; }
-            .energy-text { text-align: center; }
-            .energy-text h1 { font-size: 40px; }
-            .energy-text h1 span { font-size: 22px !important; }
-            .energy-text p { font-size: 14px; }
-            
-            .mini-stat { font-size: 16px; flex-direction: column; text-align: center; gap: 8px; width: 100%;}
-            .mini-stat i { font-size: 40px; }
-            .mini-stat strong { font-size: 24px; display: block; margin-top: 5px; margin-left: 0;}
-            
-            .area-chart { gap: 15px; }
+            /* Area Chart Mobile Fixes */
+            .area-chart { gap: 15px; height: auto;}
             .chart-group { flex-direction: column; flex: none; height: auto; gap: 5px; background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); }
-            .group-name { width: 100%; text-align: left; font-size: 15px; justify-content: flex-start; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+            .group-name { width: 100%; text-align: left; font-size: 16px; justify-content: flex-start; border-bottom: 1px solid #eee; padding-bottom: 5px; }
             .bar-container { border-left: none; padding-left: 0; gap: 8px; margin-top: 5px;}
             .bar-row { height: auto; min-height: 25px; }
-            .bar-label { width: 65px; font-size: 13px; }
-            .bar-track { height: 12px; }
-            
-            .lift-wrap { flex-direction: column; gap: 10px; font-size: 18px;}
-            .lift-wrap i { font-size: 50px; }
-            
-            .meeting-wrap { flex-direction: column; gap: 10px; font-size: 16px;}
-            .meeting-wrap i { font-size: 50px; }
-            .meeting-text { text-align: center; width: 100%; }
-            .meeting-text div { padding: 10px; border-width: 2px; }
-            
+            .bar-label { width: 85px; font-size: 14px; white-space: normal;}
+            .bar-track { height: 14px; }
+
+            /* Split Row Mobile (BEI & CO2) */
+            .split-row { flex-direction: column; gap: 15px; }
+            .split-row .card { padding: 10px; }
+            .split-row .card-inner { padding: 15px; }
+            .large-metric-icon { font-size: 45px; margin-bottom: 10px;}
+            .large-metric-val { font-size: 38px; }
+            .large-metric-desc { font-size: 15px; margin-top: 10px;}
+
             #toast { font-size: 15px; padding: 15px; width: 90%; text-align: center; border-radius: 10px; bottom: -100px; }
             #toast.show { bottom: 20px; }
+
+            .header-logo { height: 40px; margin-right: 10px; }
         }
     </style>
 </head>
@@ -275,99 +365,156 @@
     <div class="dashboard-container">
         
         <header>
-            <div class="logo-a">A</div>
-            <div class="header-title">ASTRO OFFICE BUILDING <span class="header-divider">|</span> BUILDING MANAGEMENT DASHBOARD</div>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/1/14/Astro_logo.svg" alt="Astro Logo" class="header-logo">
+            <div class="header-title">ASTRO OFFICE BUILDING <span class="header-divider">|</span> BUILDING MANAGEMENT SYSTEM</div>
         </header>
 
         <div class="grid">
             
             <div class="column">
-                <div class="col-title">INDOOR ENVIRONMENT & AIR QUALITY</div>
-                
-                <div class="card card-inner interactive" onclick="refreshOccupancy()">
-                    <h4>OCCUPANCY</h4>
-                    <div class="occ-wrap">
-                        <i class="fa-solid fa-users"></i>
-                        <div class="occ-box">
-                            <h2 id="occ-current">1500</h2>
-                            <span>Current</span>
+                <div class="card" style="background: transparent; border: none; box-shadow: none; padding: 0;">
+                    <div class="status-grid">
+                        
+                        <div class="status-box status-normal interactive" onclick="refreshComfort(this)">
+                            <i class="fa-solid fa-gauge-high status-icon"></i>
+                            <div class="status-text-col">
+                                <h5>Space Comfort Index</h5>
+                                <h2 id="comfort-text">COMFORT</h2>
+                                <span>INDEX: <strong id="comfort-idx">2.63</strong></span>
+                            </div>
                         </div>
-                        <div class="occ-box">
-                            <h2 id="occ-avg">85%</h2>
-                            <span>Average</span>
+
+                        <div class="status-box status-normal interactive" data-state="normal" onclick="cycleSeverity(this, 'water')">
+                            <i class="fa-solid fa-droplet status-icon"></i>
+                            <div class="status-text-col">
+                                <h5>Water Disturbance</h5>
+                                <h2>NORMAL</h2>
+                                <span>SYSTEM STABLE</span>
+                            </div>
                         </div>
+
+                        <div class="status-box status-normal interactive" data-state="normal" onclick="cycleSeverity(this, 'elevator')">
+                            <i class="fa-solid fa-elevator status-icon"></i>
+                            <div class="status-text-col">
+                                <h5>Elevator Status</h5>
+                                <h2>NORMAL</h2>
+                                <span>ALL CABINS ACTIVE</span>
+                            </div>
+                        </div>
+
+                        <div class="status-box status-normal interactive" data-state="normal" onclick="cycleSeverity(this, 'sprinkler')">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="status-icon" style="width: 1em; height: 1em;">
+                                <path d="M4 2h16v3H4z" />
+                                <path d="M10 5h4v4l-1 2h-2l-1-2z" />
+                                <circle cx="12" cy="11.5" r="1.5" />
+                                <g stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="0 5" fill="none">
+                                    <path d="M12 14v8" />
+                                    <path d="M9 13.5l-5 7" />
+                                    <path d="M15 13.5l5 7" />
+                                </g>
+                            </svg>
+                            <div class="status-text-col">
+                                <h5>Sprinkler Status</h5>
+                                <h2>NORMAL</h2>
+                                <span>PRESSURE OPTIMAL</span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
-                <div class="gauge-row">
-                    <div class="gauge-card interactive" onclick="refreshTemp()">
-                        <h4>TEMPERATURE</h4>
-                        <div class="gauge-container">
-                            <div class="canvas-wrapper"><canvas id="tempChart"></canvas></div>
-                            <div class="gauge-val" id="temp-val">26°C</div>
-                            <i class="fa-solid fa-temperature-half gauge-icon" style="color: #94a3b8;"></i>
-                        </div>
+                <div class="card card-inner hover-bg-white interactive" onclick="showToast('Accessing room booking schedules...', '#3b82f6')">
+                    <div class="header-wrap">
+                        <i class="fa-solid fa-people-roof header-icon" style="color: var(--blue-icon);"></i>
+                        <h4>AVAILABLE MEETING ROOMS</h4>
                     </div>
-                    <div class="gauge-card interactive" onclick="refreshHumid()">
-                        <h4>HUMIDITY</h4>
-                        <div class="gauge-container">
-                            <div class="canvas-wrapper"><canvas id="humidChart"></canvas></div>
-                            <div class="gauge-val" id="humid-val">55%</div>
-                            <i class="fa-solid fa-droplet gauge-icon" style="color: var(--blue-icon);"></i>
+                    <div class="meeting-wrap">
+                        <div class="meeting-pills">
+                            <div class="pill"><i class="fa-solid fa-door-open"></i> CMS 1</div>
+                            <div class="pill"><i class="fa-solid fa-door-open"></i> CMS 3</div>
+                            <div class="pill"><i class="fa-solid fa-door-open"></i> CMS 5</div>
+                            <div class="pill"><i class="fa-solid fa-door-open"></i> CMS 7</div>
+                            <div class="pill"><i class="fa-solid fa-door-open"></i> CMS 9</div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="card card-inner interactive" onclick="refreshAir()">
-                    <h4>AIR QUALITY</h4>
-                    <div class="aq-wrap">
-                        <i class="fa-solid fa-wind"></i>
-                        <div class="aq-text">
-                            <div><span>INDOOR</span> <span class="aq-val-in" id="aq-in">1.5 PPM</span></div>
-                            <div><span>OUTDOOR</span> <span class="aq-val-out" id="aq-out">82 PPM</span></div>
+                        <div class="meeting-pills">
+                            <div class="pill"><i class="fa-solid fa-building"></i> Level3 Room1</div>
+                            <div class="pill"><i class="fa-solid fa-building"></i> Level3 Room2</div>
+                        </div>
+                        <div class="meeting-pills">
+                            <div class="pill"><i class="fa-solid fa-building"></i> Level3 Room3</div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="column">
-                <div class="col-title">ENERGY & SUSTAINABILITY TODAY</div>
                 
-                <div class="card card-inner alert-box interactive" onclick="showToast('Alert Acknowledged. Maintenance Team Dispatched.', 'var(--red-alert)')">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                    <h3>HIGHER THAN USUAL</h3>
+                <div class="card card-inner" style="padding: 0; flex: 2.2; overflow: hidden; justify-content: space-between;">
+                    <div style="padding: 1.5vh 1.5vw; display: flex; flex-direction: column; height: 100%; width: 100%;">
+                        <div class="header-wrap" style="margin-bottom: auto;">
+                            <i class="fa-solid fa-chart-line header-icon" style="color: var(--text-grey);"></i>
+                            <h4>ENERGY & SUSTAINABILITY TODAY</h4>
+                        </div>
+                        
+                        <div class="energy-wrap interactive" onclick="refreshEnergy()" style="margin: auto 0;">
+                            <i class="fa-solid fa-bolt-lightning energy-main-icon"></i>
+                            <div class="energy-text">
+                                <h1 id="energy-val">22,590 <span style="font-size: 0.6em; vertical-align: middle;">kWh</span></h1>
+                                <p>Total energy used today</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="energy-alert-banner status-warning interactive" id="energy-alert-box" data-state="warning" onclick="cycleEnergySeverity(this)">
+                        <i class="fa-solid fa-triangle-exclamation" id="energy-alert-icon" style="animation: pulse 1.5s infinite;"></i>
+                        <h3 id="energy-alert-text">HIGHER THAN USUAL</h3>
+                    </div>
                 </div>
 
-                <div class="card card-inner interactive" onclick="refreshEnergy()">
-                    <div class="energy-wrap">
-                        <i class="fa-solid fa-bolt"></i>
-                        <div class="energy-text">
-                            <h1 id="energy-val">22,590 <span style="font-size: 4vh;">kWh</span></h1>
-                            <p>TOTAL ENERGY USED TODAY</p>
+                <div class="card card-inner hover-bg-white interactive" style="justify-content: center; padding-top: 2vh; padding-bottom: 2vh;" onclick="showToast('Connecting to Solar Inverter...', 'var(--blue-icon)')">
+                    <div class="mini-stat">
+                        <div class="icon-badge solar-badge">
+                            <i class="fa-solid fa-solar-panel"></i>
+                        </div>
+                        <span>SOLAR POWERING : <strong>8%</strong></span>
+                    </div>
+                    <div class="carousel-container">
+                        <div class="carousel-item active"><i class="fa-solid fa-plug" style="color: #f59e0b;"></i> Equivalent to powering 100% of all office monitors.</div>
+                        <div class="carousel-item"><i class="fa-solid fa-bullseye" style="color: var(--blue-icon);"></i> Target: 15% solar reliance by 2027.</div>
+                        <div class="carousel-item"><i class="fa-solid fa-elevator" style="color: var(--text-grey);"></i> Enough energy to run all elevators for 12 hours.</div>
+                    </div>
+                </div>
+
+                <div class="card flip-container interactive" onclick="toggleFlip(this)">
+                    <div class="flipper">
+                        <div class="front hover-bg-white">
+                            <i class="fa-solid fa-circle-info info-icon"></i>
+                            <div class="mini-stat">
+                                <div class="icon-badge tree-badge">
+                                    <i class="fa-solid fa-tree"></i>
+                                </div>
+                                <span>TREES SAVED : <strong id="trees-val">280</strong></span>
+                            </div>
+                        </div>
+                        <div class="back">
+                            <i class="fa-solid fa-rotate-left info-icon" style="color: rgba(255,255,255,0.8);"></i>
+                            <h4 style="color: white; margin-bottom: 1vh;">DID YOU KNOW?</h4>
+                            <p style="font-size: min(1.6vh, 1.3vw); font-weight: 600; line-height: 1.4;">
+                                This equals a forest the size of 3 football fields! These trees filter enough oxygen for <strong>1,120 people</strong> to breathe today.
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                <div class="card card-inner interactive" onclick="showToast('Fetching latest Solar Grid input...', 'var(--blue-icon)')">
-                    <div class="mini-stat">
-                        <i class="fa-solid fa-solar-panel" style="color: #64748b;"></i>
-                        <span>SOLAR POWERING: <strong>8%</strong></span>
-                    </div>
-                </div>
-
-                <div class="card card-inner interactive" onclick="showToast('Sustainability goals calculated.', 'var(--green-icon)')">
-                    <div class="mini-stat">
-                        <i class="fa-solid fa-tree" style="color: var(--green-icon);"></i>
-                        <span>TREES SAVED: <strong id="trees-val">280</strong></span>
-                    </div>
-                </div>
             </div>
 
             <div class="column">
-                <div class="col-title">AREA USAGE & FACILITY STATUS</div>
                 
-                <div class="card card-inner interactive" style="align-items: flex-start;" onclick="randomizeBars()">
-                    <h4>ENERGY USAGE BY AREA</h4>
+                <div class="card card-inner hover-bg-white interactive" style="flex: 1.6;" onclick="randomizeBars()">
+                    <div class="header-wrap">
+                        <i class="fa-solid fa-chart-simple header-icon" style="color: var(--text-grey);"></i>
+                        <h4>ENERGY USAGE BY AREA</h4>
+                    </div>
                     <div class="area-chart">
                         <div class="chart-group">
                             <div class="group-name">Main<br>Building</div>
@@ -378,7 +525,7 @@
                                 <div class="bar-row"><div class="bar-label">3rd Floor</div><div class="bar-track"><div class="bar-fill bg-main" id="bar4" style="width: 75%;"></div></div></div>
                             </div>
                         </div>
-                        <div class="chart-group">
+                        <div class="chart-group" style="flex: 0.3;">
                             <div class="group-name">Broadcast<br>Building</div>
                             <div class="bar-container">
                                 <div class="bar-row"><div class="bar-track"><div class="bar-fill bg-broad" id="bar5" style="width: 70%;"></div></div></div>
@@ -395,21 +542,26 @@
                     </div>
                 </div>
 
-                <div class="card card-inner interactive" onclick="showToast('Opening Lift 1 Service Log...', '#f59e0b')">
-                    <h4>LIFT STATUS</h4>
-                    <div class="lift-wrap">
-                        <i class="fa-solid fa-elevator"></i>
-                        <div>Lift 1 (Cabin 3): <br><span style="color: var(--orange-warn);">MAINTENANCE</span></div>
+                <div class="split-row">
+                    <div class="card card-inner hover-bg-white interactive" onclick="refreshBEI()">
+                        <div class="header-wrap">
+                            <h4 style="font-size: min(1.5vh, 1.2vw);">BEI</h4>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1;">
+                            <i class="fa-solid fa-leaf large-metric-icon" style="color: var(--status-green-dark);"></i>
+                            <h1 class="large-metric-val" id="bei-val">115 <span class="large-metric-unit">kWh/m²</span></h1>
+                            <p class="large-metric-desc" id="bei-desc" style="color: var(--status-green-dark);">EXCELLENT</p>
+                        </div>
                     </div>
-                </div>
 
-                <div class="card card-inner interactive" onclick="showToast('Checking room booking system...', '#3b82f6')">
-                    <h4>AVAILABLE MEETING ROOMS</h4>
-                    <div class="meeting-wrap">
-                        <i class="fa-solid fa-people-roof"></i>
-                        <div class="meeting-text">
-                            <div>CMS 1, 3, 5, 7, 9</div>
-                            <div>Cabin 3: Level3 Room1, Level3 Room2</div>
+                    <div class="card card-inner hover-bg-white interactive" onclick="refreshCO2()">
+                        <div class="header-wrap">
+                            <h4 style="font-size: min(1.5vh, 1.2vw);">CO2 AVOIDED</h4>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1;">
+                            <i class="fa-solid fa-smog large-metric-icon" style="color: #64748b;"></i>
+                            <h1 class="large-metric-val" id="co2-val">4.25 <span class="large-metric-unit">tons/month</span></h1>
+                            <p class="large-metric-desc" style="color: var(--text-grey);">OFFSET</p>
                         </div>
                     </div>
                 </div>
@@ -421,30 +573,7 @@
     <div id="toast">Data Refreshed!</div>
 
     <script>
-        const gaugeOptions = {
-            rotation: -90,
-            circumference: 180,
-            cutout: '78%',
-            plugins: { tooltip: { enabled: false }, legend: { display: false } },
-            maintainAspectRatio: true,
-            aspectRatio: 1.8, 
-            responsive: true,
-            layout: { padding: 0 },
-            animation: { duration: 1200, easing: 'easeOutQuart' }
-        };
-
-        const tempChart = new Chart(document.getElementById('tempChart'), {
-            type: 'doughnut',
-            data: { datasets: [{ data: [60, 40], backgroundColor: ['#22c55e', '#e2e8f0'], borderWidth: 0, borderRadius: 20 }] },
-            options: gaugeOptions
-        });
-
-        const humidChart = new Chart(document.getElementById('humidChart'), {
-            type: 'doughnut',
-            data: { datasets: [{ data: [55, 45], backgroundColor: ['#3b82f6', '#e2e8f0'], borderWidth: 0, borderRadius: 20 }] },
-            options: gaugeOptions
-        });
-
+        // --- 1. Basic Interactive Functions ---
         let toastTimeout;
         function showToast(message, color = '#1e293b') {
             const toast = document.getElementById('toast');
@@ -457,36 +586,133 @@
 
         function getRnd(min, max) { return Math.floor(Math.random() * (max - min + 1) ) + min; }
 
-        function refreshOccupancy() {
-            let occ = getRnd(1300, 1600);
-            document.getElementById('occ-current').innerText = occ;
-            document.getElementById('occ-avg').innerText = getRnd(75, 95) + '%';
-            document.getElementById('occ-current').style.color = occ > 1550 ? 'var(--orange-warn)' : 'var(--text-dark)';
-            showToast('Live Occupancy Updated', 'var(--blue-icon)');
+        // --- 2. Educational Feature Scripts ---
+        
+        // Carousel Auto-Rotator
+        let currentCarouselIdx = 0;
+        const carouselItems = document.querySelectorAll('.carousel-item');
+        setInterval(() => {
+            if(carouselItems.length > 0) {
+                carouselItems[currentCarouselIdx].classList.remove('active');
+                currentCarouselIdx = (currentCarouselIdx + 1) % carouselItems.length;
+                carouselItems[currentCarouselIdx].classList.add('active');
+            }
+        }, 4000); 
+
+        // Flip Card Logic (Auto + Manual)
+        let flipInterval;
+        
+        function toggleFlip(element) {
+            const flipper = element.querySelector('.flipper');
+            if(flipper) flipper.classList.toggle('flipped');
+            
+            clearInterval(flipInterval);
+            startAutoFlip();
         }
 
-        function refreshTemp() {
-            let temp = getRnd(22, 29);
-            document.getElementById('temp-val').innerText = temp + '°C';
-            let percent = (temp / 40) * 100;
-            tempChart.data.datasets[0].data = [percent, 100 - percent];
-            tempChart.data.datasets[0].backgroundColor = temp > 26 ? ['var(--orange-warn)', '#e2e8f0'] : ['#22c55e', '#e2e8f0'];
-            tempChart.update();
-            showToast('Sensor Data Refresh: Temperature', 'var(--green-icon)');
+        function startAutoFlip() {
+            flipInterval = setInterval(() => {
+                const flipper = document.querySelector('.flip-container .flipper');
+                if(flipper) flipper.classList.toggle('flipped');
+            }, 10000); 
         }
 
-        function refreshHumid() {
-            let humid = getRnd(45, 75);
-            document.getElementById('humid-val').innerText = humid + '%';
-            humidChart.data.datasets[0].data = [humid, 100 - humid];
-            humidChart.update();
-            showToast('Sensor Data Refresh: Humidity', 'var(--blue-icon)');
+        startAutoFlip();
+
+        // --- 3. Demo Data Scripts ---
+
+        function refreshComfort(element) {
+            let idx = (Math.random() * (2.9 - 2.1) + 2.1).toFixed(2);
+            document.getElementById('comfort-idx').innerText = idx;
+            let statusText = document.getElementById('comfort-text');
+            
+            element.classList.remove('status-normal', 'status-warning', 'status-cool');
+
+            if(idx > 2.8) { 
+                statusText.innerText = "WARM"; 
+                element.classList.add('status-warning');
+                showToast('Temperature rising. HVAC adjusting...', '#ca8a04');
+            }
+            else if(idx < 2.2) { 
+                statusText.innerText = "COOL"; 
+                element.classList.add('status-cool');
+                showToast('Temperature dropping. Heating engaged.', '#0284c7');
+            }
+            else { 
+                statusText.innerText = "COMFORT"; 
+                element.classList.add('status-normal');
+                showToast('Comfort Index Sensors Recalculated', '#064e3b');
+            }
         }
 
-        function refreshAir() {
-            document.getElementById('aq-in').innerText = (Math.random() * (2.5 - 0.5) + 0.5).toFixed(1) + ' PPM';
-            document.getElementById('aq-out').innerText = getRnd(60, 95) + ' PPM';
-            showToast('Air Quality Index Synchronized', 'var(--blue-icon)');
+        function cycleSeverity(element, system) {
+            let currentState = element.getAttribute('data-state') || 'normal';
+            let titleEl = element.querySelector('h2');
+            let subEl = element.querySelector('span');
+
+            element.classList.remove('status-normal', 'status-warning', 'status-critical');
+
+            if (currentState === 'normal') {
+                element.setAttribute('data-state', 'warning');
+                element.classList.add('status-warning');
+                titleEl.innerText = 'WARNING';
+                if(system === 'water') subEl.innerText = 'MINOR LEAK DETECTED';
+                if(system === 'elevator') subEl.innerText = 'CABIN 1 OFFLINE';
+                if(system === 'sprinkler') subEl.innerText = 'PRESSURE FLUCTUATING';
+                showToast(system.toUpperCase() + ' warning triggered for demo.', '#ca8a04');
+            } 
+            else if (currentState === 'warning') {
+                element.setAttribute('data-state', 'critical');
+                element.classList.add('status-critical');
+                titleEl.innerText = 'CRITICAL';
+                if(system === 'water') subEl.innerText = 'MAIN PIPE BURST';
+                if(system === 'elevator') subEl.innerText = 'SYSTEM FAILURE';
+                if(system === 'sprinkler') subEl.innerText = 'SYSTEM OFFLINE';
+                showToast(system.toUpperCase() + ' critical alert triggered!', '#dc2626');
+            } 
+            else {
+                element.setAttribute('data-state', 'normal');
+                element.classList.add('status-normal');
+                titleEl.innerText = 'NORMAL';
+                if(system === 'water') subEl.innerText = 'SYSTEM STABLE';
+                if(system === 'elevator') subEl.innerText = 'ALL CABINS ACTIVE';
+                if(system === 'sprinkler') subEl.innerText = 'PRESSURE OPTIMAL';
+                showToast(system.toUpperCase() + ' system normalized.', '#16a34a');
+            }
+        }
+
+        function cycleEnergySeverity(element) {
+            let currentState = element.getAttribute('data-state') || 'warning';
+            let titleEl = document.getElementById('energy-alert-text');
+            let iconEl = document.getElementById('energy-alert-icon');
+
+            element.classList.remove('status-normal', 'status-warning', 'status-critical');
+            iconEl.classList.remove('fa-circle-check', 'fa-triangle-exclamation', 'fa-bolt');
+            iconEl.style.animation = 'none';
+
+            if (currentState === 'warning') {
+                element.setAttribute('data-state', 'critical');
+                element.classList.add('status-critical');
+                titleEl.innerText = 'CRITICAL SURGE DETECTED';
+                iconEl.classList.add('fa-bolt');
+                iconEl.style.animation = 'pulse 1s infinite';
+                showToast('CRITICAL: Power surge detected. Initiating load shedding.', '#dc2626');
+            } 
+            else if (currentState === 'critical') {
+                element.setAttribute('data-state', 'normal');
+                element.classList.add('status-normal');
+                titleEl.innerText = 'USAGE NORMAL';
+                iconEl.classList.add('fa-circle-check');
+                showToast('Energy usage has returned to normal levels.', '#16a34a');
+            } 
+            else {
+                element.setAttribute('data-state', 'warning');
+                element.classList.add('status-warning');
+                titleEl.innerText = 'HIGHER THAN USUAL';
+                iconEl.classList.add('fa-triangle-exclamation');
+                iconEl.style.animation = 'pulse 1.5s infinite';
+                showToast('WARNING: Energy usage spiking.', '#ca8a04');
+            }
         }
 
         function refreshEnergy() {
@@ -494,14 +720,47 @@
             let current = parseInt(currentStr);
             let newVal = current + getRnd(5, 20);
             
-            let spanClass = window.innerWidth <= 1024 ? 'font-size: 22px;' : 'font-size: 4vh;';
-            document.getElementById('energy-val').innerHTML = newVal.toLocaleString() + ` <span style="${spanClass}">kWh</span>`;
-            
-            if(getRnd(1,3) === 1) {
-                let trees = parseInt(document.getElementById('trees-val').innerText) + 1;
-                document.getElementById('trees-val').innerText = trees;
-            }
+            document.getElementById('energy-val').innerHTML = newVal.toLocaleString() + ' <span class="large-metric-unit" style="font-size: 0.6em;">kWh</span>';
             showToast('Energy Consumption Meter Read', 'var(--orange-warn)');
+        }
+
+        function refreshBEI() {
+            let currentStr = document.getElementById('bei-val').innerText.replace(/\D/g,'');
+            let current = parseInt(currentStr);
+            
+            let newVal = current + getRnd(-3, 3);
+            if(newVal < 90) newVal = 90;
+            if(newVal > 150) newVal = 150;
+
+            document.getElementById('bei-val').innerHTML = newVal + ' <span class="large-metric-unit">kWh/m²</span>';
+            
+            let desc = document.getElementById('bei-desc');
+            let icon = document.querySelector('#bei-val').previousElementSibling;
+
+            if(newVal <= 120) {
+                desc.innerText = "EXCELLENT";
+                desc.style.color = "var(--status-green-dark)";
+                icon.style.color = "var(--status-green-dark)";
+            } else if (newVal <= 135) {
+                desc.innerText = "GOOD EFFICIENCY";
+                desc.style.color = "#84cc16"; 
+                icon.style.color = "#84cc16";
+            } else {
+                desc.innerText = "NEEDS REVIEW";
+                desc.style.color = "var(--orange-warn)";
+                icon.style.color = "var(--orange-warn)";
+            }
+            
+            showToast('Building Energy Index Recalculated', 'var(--blue-icon)');
+        }
+
+        function refreshCO2() {
+            let currentStr = document.getElementById('co2-val').innerText.replace(/[^\d.-]/g, '');
+            let current = parseFloat(currentStr);
+            let newVal = current + (getRnd(1, 5) / 100);
+            
+            document.getElementById('co2-val').innerHTML = newVal.toFixed(2) + ' <span class="large-metric-unit">tons/month</span>';
+            showToast('Emission offset metrics updated.', '#64748b');
         }
 
         function randomizeBars() {
@@ -510,11 +769,6 @@
             }
             showToast('Area Energy Distribution Recalculated', '#64748b');
         }
-        
-        window.addEventListener('resize', () => {
-            tempChart.resize();
-            humidChart.resize();
-        });
     </script>
 </body>
 </html>
