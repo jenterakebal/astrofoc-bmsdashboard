@@ -70,7 +70,7 @@
             z-index: 10;
             height: 6.5vh;
         }
-        /* Make the "A" logo pop with Astro Magenta against the charcoal black */
+        /* RESTORED "A" LOGO STYLES */
         .logo-a { color: #E6007D; font-size: 3.5vh; font-weight: 900; font-style: italic; margin-right: 1vw; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);}
         .header-title { font-size: 2.8vh; font-weight: bold; letter-spacing: 0.1vw; text-transform: uppercase; }
         .header-divider { margin: 0 1vw; font-weight: normal; opacity: 0.6;}
@@ -199,8 +199,8 @@
         .energy-alert-banner i { font-size: min(3.5vh, 3vw); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
         .energy-alert-banner h3 { font-size: min(2.5vh, 2vw); font-weight: 900; letter-spacing: 0.1vw; margin: 0; }
 
-        .mini-stat { display: flex; align-items: center; justify-content: center; width: 100%; font-size: min(2.5vh, 2vw); color: var(--text-grey); font-weight: 600;}
-        .mini-stat i { font-size: min(4vh, 3.5vw); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); flex-shrink: 0;}
+        /* INCREASED GAP for mini-stats */
+        .mini-stat { display: flex; align-items: center; justify-content: center; gap: 1.5vw; width: 100%; font-size: min(2.5vh, 2vw); color: var(--text-grey); font-weight: 600;}
         .mini-stat strong { font-weight: 900; color: var(--text-dark); font-size: min(3.2vh, 2.8vw); margin-left: 0.5vw;}
 
         /* NEW BADGE STYLES FOR SOLAR & TREES */
@@ -314,7 +314,7 @@
             .energy-alert-banner h3 { font-size: 20px; }
 
             /* Badges Mobile Spacing */
-            .mini-stat { font-size: 18px; flex-direction: row; justify-content: center; gap: 20px; width: 100%;}
+            .mini-stat { font-size: 18px; flex-direction: row; justify-content: center; gap: 25px; width: 100%;}
             .icon-badge { width: 70px; height: 70px; }
             .icon-badge i { font-size: 35px !important; }
             .mini-stat strong { font-size: 28px; margin-left: 5px;}
@@ -347,6 +347,7 @@
 
             #toast { font-size: 15px; padding: 15px; width: 90%; text-align: center; border-radius: 10px; bottom: -100px; }
             #toast.show { bottom: 20px; }
+
         }
     </style>
 </head>
