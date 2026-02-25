@@ -70,16 +70,8 @@
             z-index: 10;
             height: 6.5vh;
         }
-
-        /* REPLACED .logo-a WITH .header-logo FOR THE IMAGE */
-        .header-logo {
-            height: 4.5vh; /* Sized to fit nicely within the 6.5vh header height */
-            width: auto;   /* Maintain aspect ratio */
-            margin-right: 1.5vw;
-            /* Optional: subtle drop shadow to make it pop off the dark background */
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-        }
-
+        /* Make the "A" logo pop with Astro Magenta against the charcoal black */
+        .logo-a { color: #E6007D; font-size: 3.5vh; font-weight: 900; font-style: italic; margin-right: 1vw; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);}
         .header-title { font-size: 2.8vh; font-weight: bold; letter-spacing: 0.1vw; text-transform: uppercase; }
         .header-divider { margin: 0 1vw; font-weight: normal; opacity: 0.6;}
 
@@ -355,8 +347,6 @@
 
             #toast { font-size: 15px; padding: 15px; width: 90%; text-align: center; border-radius: 10px; bottom: -100px; }
             #toast.show { bottom: 20px; }
-
-            .header-logo { height: 40px; margin-right: 10px; }
         }
     </style>
 </head>
@@ -365,7 +355,7 @@
     <div class="dashboard-container">
         
         <header>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/1/14/Astro_logo.svg" alt="Astro Logo" class="header-logo">
+            <div class="logo-a">A</div>
             <div class="header-title">ASTRO OFFICE BUILDING <span class="header-divider">|</span> BUILDING MANAGEMENT SYSTEM</div>
         </header>
 
