@@ -70,7 +70,7 @@
             z-index: 10;
             height: 6.5vh;
         }
-        /* RESTORED "A" LOGO STYLES */
+        
         .logo-a { color: #E6007D; font-size: 3.5vh; font-weight: 900; font-style: italic; margin-right: 1vw; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);}
         .header-title { font-size: 2.8vh; font-weight: bold; letter-spacing: 0.1vw; text-transform: uppercase; }
         .header-divider { margin: 0 1vw; font-weight: normal; opacity: 0.6;}
@@ -87,7 +87,7 @@
 
         .column { display: flex; flex-direction: column; gap: 1.5vh; height: 100%; min-width: 0;}
 
-        /* Card Framework - FIXED OVERFLOW */
+        /* Card Framework */
         .card {
             background: white;
             border: 0.2vh solid var(--border-color);
@@ -183,9 +183,8 @@
         .status-box span { font-size: min(1.4vh, 1.1vw); font-weight: bold; text-transform: uppercase;}
 
         /* Meeting Rooms */
-        .meeting-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.8vh; width: 100%; flex: 1; min-height: 0;}
-        .meeting-pills { display: flex; flex-wrap: wrap; gap: 0.8vh; justify-content: center; }
-        .pill { background: white; padding: 0.4vh 0.8vw; border-radius: 0.5vh; border: 0.2vh solid var(--border-color); font-size: min(1.6vh, 1.2vw); font-weight: bold; color: var(--text-dark); box-shadow: 0 0.2vh 0.5vh rgba(0,0,0,0.05); display: flex; align-items: center; gap: 0.4vw; white-space: nowrap;}
+        .meeting-wrap { display: flex; flex-wrap: wrap; align-items: center; align-content: center; justify-content: center; gap: 1vh 1vw; width: 100%; flex: 1; min-height: 0; transition: opacity 0.2s ease-in-out;}
+        .pill { background: white; padding: 0.6vh 1vw; border-radius: 0.5vh; border: 0.2vh solid var(--border-color); font-size: min(1.6vh, 1.2vw); font-weight: bold; color: var(--text-dark); box-shadow: 0 0.2vh 0.5vh rgba(0,0,0,0.05); display: flex; align-items: center; gap: 0.5vw; white-space: nowrap; }
         .pill i { font-size: 1.3vh; color: var(--blue-icon); opacity: 0.7;}
 
         /* 2. Energy Column */
@@ -199,11 +198,10 @@
         .energy-alert-banner i { font-size: min(3.5vh, 3vw); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
         .energy-alert-banner h3 { font-size: min(2.5vh, 2vw); font-weight: 900; letter-spacing: 0.1vw; margin: 0; }
 
-        /* INCREASED GAP for mini-stats */
         .mini-stat { display: flex; align-items: center; justify-content: center; gap: 1.5vw; width: 100%; font-size: min(2.5vh, 2vw); color: var(--text-grey); font-weight: 600;}
         .mini-stat strong { font-weight: 900; color: var(--text-dark); font-size: min(3.2vh, 2.8vw); margin-left: 0.5vw;}
 
-        /* NEW BADGE STYLES FOR SOLAR & TREES */
+        /* BADGE STYLES FOR SOLAR & TREES */
         .icon-badge {
             display: flex;
             align-items: center;
@@ -228,7 +226,7 @@
         .carousel-item { position: absolute; opacity: 0; transition: opacity 0.8s ease-in-out; font-size: min(1.4vh, 1.2vw); font-weight: 800; color: var(--text-dark); width: 100%; text-align: center; }
         .carousel-item.active { opacity: 1; z-index: 2;}
 
-        .flip-container { perspective: 1000px; flex: 1; padding: 0; border: none; box-shadow: none; background: transparent; cursor: pointer; min-height: 0;}
+        .flip-container { perspective: 1000px; flex: 1; padding: 0; border: none; box-shadow: none; background: transparent; cursor: pointer; min-height: 12vh;} /* 12vh min-height secures desktop stability */
         .flipper { transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; position: relative; width: 100%; height: 100%; }
         .flipper.flipped { transform: rotateY(180deg); }
         .front, .back { backface-visibility: hidden; position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 1vh; box-shadow: 0 0.4vh 1vh rgba(0,0,0,0.08); border: 0.2vh solid var(--border-color); background: var(--box-bg); display: flex; flex-direction: column; justify-content: center; align-items: center;}
@@ -296,9 +294,8 @@
             .status-box h2 { font-size: 24px; margin-bottom: 5px;}
             .status-box span { font-size: 12px; }
             
-            /* Meeting Rooms */
-            .meeting-wrap { height: auto; gap: 10px;}
-            .meeting-pills { gap: 8px; }
+            /* Meeting Rooms Mobile */
+            .meeting-wrap { height: auto; gap: 10px; padding: 10px 0;}
             .pill { font-size: 15px; padding: 10px 14px; border-width: 2px; gap: 8px;}
             .pill i { font-size: 14px; }
 
@@ -314,19 +311,29 @@
             .energy-alert-banner h3 { font-size: 20px; }
 
             /* Badges Mobile Spacing */
-            .mini-stat { font-size: 18px; flex-direction: row; justify-content: center; gap: 25px; width: 100%;}
+            .mini-stat { font-size: 18px; flex-direction: row; justify-content: center; gap: 20px; width: 100%;}
             .icon-badge { width: 70px; height: 70px; }
             .icon-badge i { font-size: 35px !important; }
             .mini-stat strong { font-size: 28px; margin-left: 5px;}
 
-            /* Mobile Overrides for Educational UX */
+            /* --- MOBILE FLIP CARD FIX (Prevents Squishing/Overflow) --- */
             .carousel-container { height: 30px; margin-top: 15px; }
             .carousel-item { font-size: 14px; }
-            .flip-container { min-height: 120px; }
+            
+            /* Force explicit height so absolute children don't overflow the flex container */
+            .flip-container { 
+                height: 180px !important; 
+                flex: none !important; 
+                width: 100%; 
+                display: block; 
+            }
             .front, .back { border-radius: 8px; border-width: 2px; padding: 15px;}
             .info-icon { font-size: 18px; top: 10px; right: 15px; }
-            .back h4 { font-size: 16px; color: white;}
-            .back p { font-size: 14px; font-weight: normal;}
+            
+            /* Formatting back text to ensure perfect fit */
+            .back { justify-content: center; text-align: center; }
+            .back h4 { font-size: 16px; color: white; margin-bottom: 8px;}
+            .back p { font-size: 13px; font-weight: normal; line-height: 1.4; margin: 0; padding: 0 5px;}
             
             /* Area Chart Mobile Fixes */
             .area-chart { gap: 15px; height: auto;}
@@ -347,7 +354,6 @@
 
             #toast { font-size: 15px; padding: 15px; width: 90%; text-align: center; border-radius: 10px; bottom: -100px; }
             #toast.show { bottom: 20px; }
-
         }
     </style>
 </head>
@@ -414,27 +420,12 @@
                     </div>
                 </div>
 
-                <div class="card card-inner hover-bg-white interactive" onclick="showToast('Accessing room booking schedules...', '#3b82f6')">
-                    <div class="header-wrap">
+                <div class="card card-inner hover-bg-white interactive" onclick="refreshRooms()">
+                    <div class="header-wrap" style="margin-bottom: 1vh;">
                         <i class="fa-solid fa-people-roof header-icon" style="color: var(--blue-icon);"></i>
-                        <h4>AVAILABLE MEETING ROOMS</h4>
+                        <h4>AVAILABLE ROOMS (<span id="room-count">0</span>)</h4>
                     </div>
-                    <div class="meeting-wrap">
-                        <div class="meeting-pills">
-                            <div class="pill"><i class="fa-solid fa-door-open"></i> CMS 1</div>
-                            <div class="pill"><i class="fa-solid fa-door-open"></i> CMS 3</div>
-                            <div class="pill"><i class="fa-solid fa-door-open"></i> CMS 5</div>
-                            <div class="pill"><i class="fa-solid fa-door-open"></i> CMS 7</div>
-                            <div class="pill"><i class="fa-solid fa-door-open"></i> CMS 9</div>
-                        </div>
-                        <div class="meeting-pills">
-                            <div class="pill"><i class="fa-solid fa-building"></i> Level3 Room1</div>
-                            <div class="pill"><i class="fa-solid fa-building"></i> Level3 Room2</div>
-                        </div>
-                        <div class="meeting-pills">
-                            <div class="pill"><i class="fa-solid fa-building"></i> Level3 Room3</div>
-                        </div>
-                    </div>
+                    <div class="meeting-wrap" id="room-container"></div>
                 </div>
             </div>
 
@@ -489,10 +480,8 @@
                         </div>
                         <div class="back">
                             <i class="fa-solid fa-rotate-left info-icon" style="color: rgba(255,255,255,0.8);"></i>
-                            <h4 style="color: white; margin-bottom: 1vh;">DID YOU KNOW?</h4>
-                            <p style="font-size: min(1.6vh, 1.3vw); font-weight: 600; line-height: 1.4;">
-                                This equals a forest the size of 3 football fields! These trees filter enough oxygen for <strong>1,120 people</strong> to breathe today.
-                            </p>
+                            <h4>DID YOU KNOW?</h4>
+                            <p>This equals a forest the size of 3 football fields! These trees filter enough oxygen for <strong>1,120 people</strong> to breathe today.</p>
                         </div>
                     </div>
                 </div>
@@ -551,7 +540,7 @@
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1;">
                             <i class="fa-solid fa-smog large-metric-icon" style="color: #64748b;"></i>
-                            <h1 class="large-metric-val" id="co2-val">4.25 <span class="large-metric-unit">tons/month</span></h1>
+                            <h1 class="large-metric-val" id="co2-val">4.25 <span class="large-metric-unit">tons/m</span></h1>
                             <p class="large-metric-desc" style="color: var(--text-grey);">OFFSET</p>
                         </div>
                     </div>
@@ -577,9 +566,59 @@
 
         function getRnd(min, max) { return Math.floor(Math.random() * (max - min + 1) ) + min; }
 
-        // --- 2. Educational Feature Scripts ---
+        // --- 2. Dynamic Meeting Rooms Logic ---
+        const masterRoomList = [
+            { name: "CMS 1", icon: "door-open" },
+            { name: "CMS 2", icon: "door-open" },
+            { name: "CMS 3", icon: "door-open" },
+            { name: "CMS 4", icon: "door-open" },
+            { name: "CMS 5", icon: "door-open" },
+            { name: "CMS 7", icon: "door-open" },
+            { name: "CMS 9", icon: "door-open" },
+            { name: "L3 Room 1", icon: "building" },
+            { name: "L3 Room 2", icon: "building" },
+            { name: "L3 Room 3", icon: "building" },
+            { name: "L4 Boardroom", icon: "users-rectangle" },
+            { name: "Studio A", icon: "video" }
+        ];
+
+        function refreshRooms() {
+            let container = document.getElementById('room-container');
+            let countSpan = document.getElementById('room-count');
+            
+            container.style.opacity = 0;
+            
+            setTimeout(() => {
+                let shuffled = [...masterRoomList].sort(() => 0.5 - Math.random());
+                let pickCount = getRnd(5, 9);
+                let picked = shuffled.slice(0, pickCount);
+                
+                container.innerHTML = '';
+                picked.forEach(room => {
+                    container.innerHTML += `<div class="pill"><i class="fa-solid fa-${room.icon}"></i> ${room.name}</div>`;
+                });
+                
+                countSpan.innerText = pickCount;
+                container.style.opacity = 1;
+                showToast('Room availability updated from booking server', '#3b82f6');
+            }, 200); 
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            let container = document.getElementById('room-container');
+            let countSpan = document.getElementById('room-count');
+            let shuffled = [...masterRoomList].sort(() => 0.5 - Math.random());
+            let pickCount = getRnd(6, 8);
+            let picked = shuffled.slice(0, pickCount);
+            
+            picked.forEach(room => {
+                container.innerHTML += `<div class="pill"><i class="fa-solid fa-${room.icon}"></i> ${room.name}</div>`;
+            });
+            countSpan.innerText = pickCount;
+        });
+
+        // --- 3. Educational Feature Scripts ---
         
-        // Carousel Auto-Rotator
         let currentCarouselIdx = 0;
         const carouselItems = document.querySelectorAll('.carousel-item');
         setInterval(() => {
@@ -590,13 +629,10 @@
             }
         }, 4000); 
 
-        // Flip Card Logic (Auto + Manual)
         let flipInterval;
-        
         function toggleFlip(element) {
             const flipper = element.querySelector('.flipper');
             if(flipper) flipper.classList.toggle('flipped');
-            
             clearInterval(flipInterval);
             startAutoFlip();
         }
@@ -610,7 +646,7 @@
 
         startAutoFlip();
 
-        // --- 3. Demo Data Scripts ---
+        // --- 4. Demo Data Scripts ---
 
         function refreshComfort(element) {
             let idx = (Math.random() * (2.9 - 2.1) + 2.1).toFixed(2);
