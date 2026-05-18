@@ -147,7 +147,7 @@
         .bei-marker { position: absolute; top: 50%; transform: translate(-50%, -50%); width: max(8px, 0.8vw); height: 3vh; background: #FFFFFF; border: 2px solid #1E293B; border-radius: 4px; box-shadow: 0 0 10px rgba(0,0,0,0.5); transition: left 1s cubic-bezier(0.2, 0.8, 0.2, 1); }
         body.light-mode .bei-marker { border-color: #F1F5F9; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
 
-        /* 3. CO2 Bar Chart & REPAIRED SMOKE ANIMATION */
+        /* 3. CO2 Bar Chart & Smoke */
         .co2-graph-area { position: relative; width: 100%; height: 8vh; margin-top: 1vh; pointer-events: none; z-index: 2;}
         .bar-chart-inline { position: relative; width: 100%; height: 100%; display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 0;}
         .bar-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 0.5vh; width: max(12px, 1.2vw); }
@@ -156,10 +156,8 @@
         .co2-bar-fill { position: absolute; bottom: 0; left: 0; width: 100%; background: var(--chart-co2); border-radius: 10px 10px 0 0; transform-origin: bottom; transition: height 1s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .co2-bar-fill.active { background: linear-gradient(0deg, #4ADE80, #22C55E); box-shadow: 0 0 15px rgba(34, 197, 94, 0.6); }
 
-        /* FIXED: Replaced 'filter: blur()' with robust radial gradients to prevent backdrop-filter clipping bugs */
         .smoke-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; overflow: hidden; border-radius: 24px;}
         .smoke-puff { position: absolute; border-radius: 50%; opacity: 0; animation: riseAndFade 6s infinite ease-in; }
-        
         .puff-dark { background: radial-gradient(circle, rgba(148,163,184,0.4) 0%, rgba(148,163,184,0) 70%); }
         body.light-mode .puff-dark { background: radial-gradient(circle, rgba(71,85,105,0.3) 0%, rgba(71,85,105,0) 70%); }
 
@@ -222,7 +220,7 @@
         
         .front, .back { backface-visibility: hidden; position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 3vh 2vw;}
         
-        .back { transform: rotateY(180deg); justify-content: center; align-items: center; text-align: center; }
+        .back { transform: rotateY(180deg); justify-content: center; align-items: center; text-align: center; border: none !important;}
         .co2-back { background: var(--grad-co2) !important; }
         .tree-back { background: var(--grad-nature) !important; }
         
@@ -258,7 +256,7 @@
         }
     </style>
 </head>
-<body class="light-mode">
+<body>
 
     <div id="premium-bg">
         <div class="bg-grid"></div>
@@ -287,7 +285,7 @@
             </button>
         </div>
 
-        <button class="theme-toggle" onclick="toggleTheme()">
+        <button class="theme-toggle" onclick="toggleThemeManual()">
             <i class="fa-solid fa-moon" id="theme-icon"></i> <span id="theme-text">Night Mode</span>
         </button>
     </header>
@@ -337,7 +335,7 @@
             </div>
 
             <div class="story-box">
-                <div class="story-item solar-story active">Right now, our roof is generating enough clean energy to <strong>power 100% of all office monitors</strong> across the building.</div>
+                <div class="story-item solar-story active">Right now, our array is generating enough clean energy to <strong>power 100% of all office monitors</strong> across the building.</div>
                 <div class="story-item solar-story">Astro is committed to the future. Our goal is to reach <strong>15% total solar reliance</strong> by the year 2027.</div>
                 <div class="story-item solar-story">The solar energy harvested today is currently enough to run <strong>every elevator in the building</strong> completely off-grid.</div>
             </div>
@@ -378,13 +376,11 @@
         <div class="flip-container interactive" id="co2-card" style="grid-area: co2;" onclick="toggleFlipWithTrivia(this, 'co2')">
             <div class="flipper">
                 <div class="front info-card co2-card">
-                    
                     <div class="smoke-container">
                         <div class="smoke-puff puff-dark puff1"></div>
                         <div class="smoke-puff puff-dark puff2"></div>
                         <div class="smoke-puff puff-dark puff3"></div>
                     </div>
-
                     <i class="fa-solid fa-circle-info info-icon"></i>
                     
                     <div class="card-header" style="width: 100%;">
@@ -480,6 +476,73 @@
     <div id="toast">Ready for Presentation</div>
 
     <script>
+        // --- SMART AUTO-THEME ENGINE ---
+        let manualOverride = false;
+
+        function initAutoTheme() {
+            if (manualOverride) return; // Respect presenter controls
+
+            const hour = new Date().getHours();
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            
+            // 7 AM (7) to 6:59 PM (18) is Day.
+            const isDayTime = hour >= 7 && hour < 19;
+            
+            if (isDayTime) {
+                body.classList.add('light-mode');
+                icon.classList.replace('fa-sun', 'fa-moon');
+                text.innerText = "Night Mode";
+            } else {
+                body.classList.remove('light-mode');
+                icon.classList.replace('fa-moon', 'fa-sun');
+                text.innerText = "Day Mode";
+            }
+            updateSolarUI();
+        }
+
+        // Presenter Manual Override
+        function toggleThemeManual() {
+            manualOverride = true; 
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            
+            body.classList.toggle('light-mode');
+            
+            if (body.classList.contains('light-mode')) {
+                icon.classList.replace('fa-sun', 'fa-moon');
+                text.innerText = "Night Mode";
+            } else {
+                icon.classList.replace('fa-moon', 'fa-sun');
+                text.innerText = "Day Mode";
+            }
+            updateSolarUI();
+            showToast('Manual Theme Override Engaged', 'var(--text-muted)');
+        }
+
+        // Check for boundary crossing if left running
+        let lastCheckedHour = new Date().getHours();
+        function checkTimeBoundary() {
+            const currentHour = new Date().getHours();
+            if (currentHour !== lastCheckedHour) {
+                manualOverride = false; // Reset override on new hour
+                
+                if (currentHour === 7) { 
+                    initAutoTheme();
+                    showToast('Good Morning: Day Mode Activated', 'var(--astro-magenta)');
+                } else if (currentHour === 19) { 
+                    initAutoTheme();
+                    showToast('Good Evening: Night Mode Activated', 'var(--astro-magenta)');
+                }
+                lastCheckedHour = currentHour;
+            }
+        }
+        setInterval(checkTimeBoundary, 60000); // Check every minute
+
+
+        // --- Layout & Data Functions ---
         function switchLayout(layoutClass, btnElement) {
             const grid = document.getElementById('main-grid');
             grid.className = `dashboard-content ${layoutClass}`;
@@ -564,7 +627,8 @@
         }
 
         window.onload = () => {
-            updateSolarUI();
+            initAutoTheme(); // Setup initial day/night state before rendering graphs
+            
             setTimeout(updateBEIUI, 100);
             setTimeout(updateCO2UI, 200);
             setTimeout(updateTreeUI, 400);
@@ -626,28 +690,10 @@
                 if(currentSolar > 200) currentSolar = 200;
                 updateSolarUI();
             }
-
             weeklyCO2[6] += 0.01;
             updateCO2UI();
         }
         setInterval(simulateLiveData, 4000);
-
-        function toggleTheme() {
-            const body = document.body;
-            const icon = document.getElementById('theme-icon');
-            const text = document.getElementById('theme-text');
-            
-            body.classList.toggle('light-mode');
-            
-            if (body.classList.contains('light-mode')) {
-                icon.classList.replace('fa-sun', 'fa-moon');
-                text.innerText = "Night Mode";
-            } else {
-                icon.classList.replace('fa-moon', 'fa-sun');
-                text.innerText = "Day Mode";
-            }
-            updateSolarUI();
-        }
 
         const trivia = {
             co2: [
